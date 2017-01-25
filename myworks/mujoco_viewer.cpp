@@ -3,23 +3,26 @@
 //  Copyright (C) 2016 Roboti LLC.   //
 //-----------------------------------//
 
+
+#include "mujoco.h"
 #include "glfw3.h"
 #include "stdlib.h"
 #include "string.h"
 #include <mutex>
-#include "stdio.h"
-#include <iostream>
 
-#include "mujoco_robot_2.cpp"
+#include "my_controller.cpp"
 
 //-------------------------------- global variables -------------------------------------
-//my globals
-bool change = true;
-int Scale = 0;
 
 // synchronization
 std::mutex gui_mutex;
-//using namespace std;
+
+// model
+mjModel* m = 0;
+mjData* d = 0;
+char lastfile[1000] = "";
+
+int system_type;
 
 // user state
 bool paused = false;
@@ -134,6 +137,7 @@ void autoscale(GLFWwindow* window)
 }
 
 
+
 // load mjb or xml model
 void loadmodel(GLFWwindow* window, const char* filename, const char* xmlstring)
 {
@@ -150,7 +154,6 @@ void loadmodel(GLFWwindow* window, const char* filename, const char* xmlstring)
         mnew = mj_loadModel(filename, 0, 0);
     else
         mnew = mj_loadXML(filename, 0, error, 1000);
-        
     if( !mnew )
     {
         printf("%s\n", error);
@@ -161,10 +164,9 @@ void loadmodel(GLFWwindow* window, const char* filename, const char* xmlstring)
     mj_deleteData(d);
     mj_deleteModel(m);
     m = mnew;
- 
     d = mj_makeData(m);
     mj_forward(m, d);
-       
+
     // save filename for reload
 	if( !xmlstring )
 	    strcpy(lastfile, filename);
@@ -182,6 +184,8 @@ void loadmodel(GLFWwindow* window, const char* filename, const char* xmlstring)
     // set title
     if( window && m->names )
         glfwSetWindowTitle(window, m->names);
+
+    glfwSetWindowPos(window, 800, 900);
 
     // center and scale view
     autoscale(window);
@@ -506,7 +510,7 @@ void makeoptionstring(const char* name, char key, char* buf)
 
 
 // advance simulation
-void advance(int itr)
+void advance(void)
 {
     // perturbations
     if( selbody>0 )
@@ -520,16 +524,29 @@ void advance(int itr)
             mjv_mousePerturb(m, d, selbody, perturb, refpos, refquat, 
                              d->xfrc_applied+6*selbody);
     }
-    
-    // install control callback
-    
-    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // advance simulation
-    mycontroller(m, d);
+    switch(system_type)
+    {
+        case 0:
+        {
+            baxter_controller(m, d);
+            break;
+        }
+        case 1:
+        {
+            dual_arm_controller(m, d);
+            break;
+        }
+        case 2:
+        {
+            single_arm_controller(m, d);
+            break;
+        }
 
-    //mj_step(m, d);
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    }
+	// 
+    
 
     // clear perturbation
     if( selbody>0 )
@@ -538,7 +555,7 @@ void advance(int itr)
 
 
 // render
-void render(GLFWwindow* window, int itr)
+void render(GLFWwindow* window)
 {
     // past data for FPS calculation
     static double lastrendertm = 0;
@@ -586,7 +603,7 @@ void render(GLFWwindow* window, int itr)
             // step at specified speed
             if( (speedtype==0 && n==0) || (speedtype==1 && d->time-startsimtm<0.016) || speedtype==2 )
             {
-                advance(itr);
+                advance();
                 n++;
             }
 
@@ -747,6 +764,4 @@ void render(GLFWwindow* window, int itr)
 
     gui_mutex.unlock();
 }
-
-
 

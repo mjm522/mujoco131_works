@@ -1,18 +1,18 @@
 #include "mujoco_viewer.cpp"
 
-
+extern int system_type;
 //-------------------------------- main function ----------------------------------------
 
 int main(int argc, const char** argv)
 {
     // print version, check compatibility
-	printf("MuJoCo Pro library version %.2lf\n\n", 0.01*mj_version());
-	if( mjVERSION_HEADER!=mj_version() )
-		mju_error("Headers and library have different versions");
+    printf("MuJoCo Pro library version %.2lf\n\n", 0.01*mj_version());
+    if( mjVERSION_HEADER!=mj_version() )
+        mju_error("Headers and library have different versions");
 
-	// activate MuJoCo license
-	mj_activate("../bin/mjkey.txt");
-	
+    // activate MuJoCo license
+    mj_activate("mjkey.txt");
+    
     // init GLFW, set multisampling
     if (!glfwInit())
         return 1;
@@ -56,8 +56,31 @@ int main(int argc, const char** argv)
     mjr_makeContext(m, &con, 200);
 
     // load model from xml file
-    loadmodel(window, "../models/baxter/baxter_pad_ee.xml", 0);
-    
+
+    system_type = 2;
+
+    switch(system_type)
+    {
+        case 0:
+        {
+            loadmodel(window, "../models/baxter/baxter_pad_ee.xml", 0);
+            break;
+        }
+
+        case 1:
+        {
+            loadmodel(window, "../models/dual_arms.xml", 0);
+            break;
+        }
+
+        case 2:
+        {
+            loadmodel(window, "../models/single_arm.xml", 0);
+            break;
+        }
+    }
+    // 
+
     // set GLFW callbacks
     glfwSetKeyCallback(window, keyboard);
     glfwSetCursorPosCallback(window, mouse_move);
@@ -65,27 +88,11 @@ int main(int argc, const char** argv)
     glfwSetScrollCallback(window, scroll);
     glfwSetDropCallback(window, drop);
 
-    //max duration
-    int itr = 0, maxItr = 10000;
-
-    double qpos[21]    = {0};
-    
-    double untuck_l[7] = {-0.08, -1.0,  -1.19, 1.94,  0.67, 1.03, -0.50};
-    double untuck_r[7] = {0.08, -1.0,   1.19, 1.94,  -0.67, 1.03,  0.50};
-
-    get_state(qpos, m, d);
-
-    mju_copy(&qpos[1], untuck_r,  7);
-    mju_copy(&qpos[8], untuck_l,  7);
-
-    set_state(qpos, m, d);
-    
     // main loop
-    while( !glfwWindowShouldClose(window))
+    while( !glfwWindowShouldClose(window) )
     {
-        itr++;
         // simulate and render
-        render(window, itr);
+        render(window);
 
         // finalize
         glfwSwapBuffers(window);
@@ -100,6 +107,6 @@ int main(int argc, const char** argv)
 
     // terminate
     glfwTerminate();
-	mj_deactivate();
+    mj_deactivate();
     return 0;
 }

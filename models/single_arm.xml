@@ -1,0 +1,112 @@
+<mujoco model="single_arm">
+	<compiler 	inertiafromgeom="true"
+				angle="radian"/>
+			
+	<size 	nuser_jnt="1"
+			nuser_geom="1"/>
+
+	<option	timestep="0.01"
+			gravity="0 0 -9.81"
+			viscosity="0"/>
+	
+	<asset>
+		<material name="MatGnd" specular=".3" shininess=".3" reflectance="0.3" rgba=".5 .55 .5 1"/>
+	</asset>
+	
+	<default>
+		<joint limited="true" damping="1" stiffness="0" armature=".1" user="0"/>
+		<geom solref="0.008 1" solimp="0.95 0.95 0.01" margin="0.001" user="0"/>
+		<motor ctrllimited="true" ctrlrange="-1 1"/>
+		<position ctrllimited="true"/>
+		
+		<default class='0'>
+			<geom friction="1 0.005 0.001" rgba=".75 .6 .5 1" contype="1" conaffinity="0"/>
+		</default>
+
+		<default class='1'>
+			<geom friction="1 0.005 0.001" rgba=".7 .6 .55 1" contype="1" conaffinity="0"/>
+		</default>
+		
+		<default class='arm'>
+			<joint damping="5"/>
+		</default>
+
+	</default>
+
+	<worldbody>
+		<light directional="true" cutoff="40" exponent="10" diffuse=".4 .4 .4" specular=".7 .7 .7" pos="0 0 1.5" dir="0 0 -1"/>
+		<geom name="tableTop" material="MatGnd" type="plane" pos="0.15 0 0" size="0.4 0.6 0.5" rgba=".6 .6 .5 1" contype="1" conaffinity="1"/>
+
+		<geom name="test_site" type="sphere" size="0.04" rgba="0.8 0.1 0.9 1" pos="0.17 -0.2 0.1"/>
+	                                                                
+		<!--  ================= Left Arm ================= /-->
+		<body name="upperarm" pos="-0.15 0 0.6">
+			<geom class="0" type="capsule" fromto="0 0 0 0 0 -0.345" size="0.05"/>
+			<joint class='arm' name="s_abduction" type="hinge" pos="0 0 0" axis="1 0 0" range="-1.57 .7" user="001"/>
+			<joint class='arm' name="s_flexion" type="hinge" pos="0 0 0" axis="0 -1 0" range="-.85 1.57" user="002"/>
+			<joint class='arm' name="s_rotation" type="hinge" pos="0 0 0" axis="0 0 1" range="-.85 .85" user="003"/>
+			
+			<body name="forearm" pos="0 0 -0.36">
+				<geom class="0" type="capsule" fromto="0 0 0 0.225 0 0" size="0.035"/>
+				<joint class='arm' name="e_flexion" type="hinge" pos="0 0 0" axis="0 -1 0" range="-1.5 1.05" user="004"/>
+				<joint class='arm' name="e_pronation" type="hinge" pos="0 0 0" axis="-1 0 0" range="-1.5 1.57" user="005"/>
+					
+		<!--  ================= Left Palm ================= /-->
+
+				<body name="paddle" pos="0.27 0 0" quat="0 1 0 0">
+					<site name="ee" pos="0.05 0.0 0" size="0.03" />
+					<geom class="1" name="paddle_link" type="capsule" fromto="0 .0 0 0.05 0.0 0" size="0.01" />
+					<geom class="1" name="paddle" type="box" pos="0.05 0.0 0" size="0.01 0.025 0.025" />
+
+					<geom class="1" name="wrist" type="capsule" fromto="0 .02 0 0 -.02 0" size="0.01" />
+					<joint name="w_abduction" type="hinge" pos="0 0 0" axis="0 0 1" range="-.5 .5" user="006"/>
+					<joint name="w_flexion" type="hinge" pos="0 0 0" axis="0 -1 0" range="-1.05 1.05" user="007"/>
+				</body>
+				
+			</body>
+			
+		</body>
+		
+		<!--  ================= TARGET ================= /-->
+		<!--
+		<body name="target" pos="0.15 0 0.091" quat="1. 0 0 0">
+			<site name="box_push1" pos="-0.055 0.0 0.055" size="0.01" />
+			<site name="box_push2" pos="-0.055 0.0 0.000" size="0.01" />
+			<site name="box_push3" pos="-0.055 0.0 -0.055" size="0.01" />
+			<site name="box_side_r" pos="0.0 0.0550 0" size="0.01" />
+			<site name="box_side_l" pos="0.0 -0.0550 0" size="0.01" />
+			<geom type="box" name="geom_target" size="0.065 0.065 0.09" pos="0 0 0" rgba="0.5 0.5 0.5 1" />
+			<joint name="fr" type="free" limited='false' damping="0" armature="0" user="010"/>
+		</body>
+	   -->
+	
+	</worldbody>
+	
+	<actuator>
+	
+		
+		<!--  ================= Torque actuators ================= /-->
+		<!--
+		<motor joint='s_abduction' 	name='ls_abduction' gear="1"/>
+		<motor joint='s_flexion' 	name='ls_flexion' 	gear="1"/>
+		<motor joint='s_rotation' 	name='ls_rotation' 	gear="1"/>
+		<motor joint='e_flexion' 	name='le_flexion' 	gear="1"/>
+		<motor joint='e_pronation' 	name='le_pronation' gear="1"/>
+		<motor joint='w_abduction' 	name='lw_abduction' gear="1"/>
+		<motor joint='w_flexion' 	name='lw_flexion' 	gear="1"/>
+	-->
+
+		
+        <!--  ================= Position actuators ================= /-->
+   
+		<position joint='s_abduction' 	    name='ls_abduction' />
+		<position joint='s_flexion' 		name='ls_flexion' 	/>
+		<position joint='s_rotation' 		name='ls_rotation' 	/>
+		<position joint='e_flexion' 		name='le_flexion' 	/>
+		<position joint='e_pronation' 	    name='le_pronation' />
+		<position joint='w_abduction' 	    name='lw_abduction' />
+		<position joint='w_flexion' 		name='lw_flexion' 	/>
+
+	</actuator>
+
+</mujoco>
